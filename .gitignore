@@ -1,0 +1,12 @@
+.idea
+/components/__pycache__/
+/backend/__pycache__/
+
+/venv
+components/migrations/
+!components/migrations/__init__.py
+
+/media
+/users
+
+/Report
