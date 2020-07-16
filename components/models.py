@@ -14,13 +14,14 @@ def topic_directory_path(instance, filename):
 
 
 class Account(models.Model):
-    id = models.AutoField(primary_key=True)     # 账户ID(PK)
+    account_id = models.AutoField(primary_key=True)     # 账户ID(PK)
+    password = models.CharField(max_length=15)
     nickname = models.CharField(max_length=15)  # 账户昵称
     # avatar = models.ImageField(upload_to=user_directory_path)    # 头像 - 目录储存方式
     # background = models.ImageField(upload_to=user_directory_path)    # 背景图片 - 目录储存方式
     avatar = models.CharField(max_length=500)   # 头像 - base64储存方式
     background = models.CharField(max_length=1000) # 背景图片 - bas64储存方式
-    signature = models.CharField(max_length=50) # 签名
+    signature = models.CharField(max_length=50) # 签名或个人简介
     NORMAL = 'normal'
     SUPER = 'super'
     ACCOUNT_TYPE = [
@@ -30,39 +31,117 @@ class Account(models.Model):
     type = models.CharField(max_length=10, default=NORMAL, choices=ACCOUNT_TYPE)
 
 
-class MessageId(models.Model):
-    id = models.AutoField(primary_key=True)     # 所有话题、回复、内层回复的统一ID
+class FocusAccount(models.Model): # 用户关注别人，多对多关系，使用一张表专门记录
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+    focused_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
 
 
-class Topic(models.Model):
-    id = models.OneToOneField('MessageId', on_delete=models.CASCADE, to_field='id', primary_key=True)     # 话题ID(PK)
-    sender = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='id')  # 发送者
+class Category1(models.Model):  # 顶层分类
+    category1_id = models.AutoField(primary_key=True)
+    category1_name = models.TextField()
+
+
+class Category2(models.Model):  # 第二层分类
+    category2_id = models.AutoField(primary_key=True)
+    category2_name = models.TextField()
+    category1_id = models.ForeignKey('Category1', on_delete=models.CASCADE, to_field='category1_id')
+
+# 匿名的话，判断anonymity。如果不匿名，就使用用户昵称为显示名称。如果匿名，就使用account_id和topic_id一起Hash得出匿名名称
+
+
+class Topic(models.Model):  # 主题
+    topic_id = models.AutoField(primary_key=True)  # 主题id
+    category2_id = models.ForeignKey('Category2', on_delete=models.CASCADE, to_field='category2_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')  # 发送者
     content = models.TextField()                # 内容
-    create_time = models.DateTimeField()        # 创建时间
-    anonymity = models.BooleanField()           # 匿名性
-    expire_time = models.DateTimeField(blank=True)  # 过期时间
-    category = models.PositiveIntegerField()    # 话题分类
-    tags = models.BigIntegerField()             # 话题标签，请使用一个整数表示该话题的所有标签，最长64位
+    create_time = models.DateTimeField()        # 创建时间，用以排序。一般从最新的信息到较老的信息排序
+    tags = models.BigIntegerField()             # 话题标签，请使用一个整数表示该话题的所有标签，最长64位。这个暂时不知道是干嘛用的
+    legal = models.BooleanField()               # 合法性，当前内容被举报不合法时，不应该对非主题/回复/评论发布者显示内容
+    up_vote_count = models.IntegerField()       # 主题被点赞计数
+    down_vote_count = models.IntegerField()
 
 
-class TopicPicture(models.Model):
-    topic_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='id')
+class FocusTopic(models.Model): # 用户关注别人，多对多关系，使用一张表专门记录
+    topic_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+    focused_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='topic_id')
+
+
+class TopicUpVote(models.Model): # 用户点赞主题，多对多关系，使用一张表专门记录。下同，不再赘述
+    topic_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='topic_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class TopicDownVote(models.Model):
+    topic_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='topic_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class Answer(models.Model):  # 回复
+    answer_id = models.AutoField(primary_key=True)
+    topic_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='topic_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+    content = models.TextField()  # 内容
+    create_time = models.DateTimeField()  # 创建时间，用以排序。一般从最新的信息到较老的信息排序
+    legal = models.BooleanField()
+    up_vote_count = models.IntegerField()
+    down_vote_count = models.IntegerField()
+
+
+class AnswerUpVote(models.Model):
+    answer_id = models.ForeignKey('Answer', on_delete=models.CASCADE, to_field='answer_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class AnswerDownVote(models.Model):
+    answer_id = models.ForeignKey('Answer', on_delete=models.CASCADE, to_field='answer_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class AnswerCollection(models.Model):
+    answer_id = models.ForeignKey('Answer', on_delete=models.CASCADE, to_field='answer_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+# class TopicPicture(models.Model):
+ # topic_id = models.ForeignKey('Topic', on_delete=models.CASCADE, to_field='id')
     # image = models.FileField(upload_to=topic_directory_path)
-    image = models.CharField(max_length=5000)
+  # image = models.CharField(max_length=5000)
 
 
-class Comment(models.Model):
+class Comment(models.Model):  # 评论，这个比较难搞
     # comment_id表示该回复自己的id
     # master_id表示父消息id，可以指向一个Topic代表外层回复；可以指向一个Comment代表嵌套回复；父id被删除则级联删除
-    comment_id = models.OneToOneField('MessageId', on_delete=models.CASCADE, to_field='id', primary_key=True, related_name='comment_id')
-    master_id = models.ForeignKey('MessageId', on_delete=models.CASCADE, to_field='id', related_name='master_id')
-    sender = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='id')
+    comment_id = models.AutoField(primary_key=True)
+    answer_id = models.ForeignKey('Answer', on_delete=models.CASCADE, to_field='answer_id')
+    master_id = models.ForeignKey('Comment', on_delete=models.CASCADE, to_field='comment_id')  # 注意，外键可以为空
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+    content = models.TextField()  # 内容
+    create_time = models.DateTimeField()  # 创建时间，用以排序。一般从最新的信息到较老的信息排序
+    legal = models.BooleanField()
+    up_vote_count = models.IntegerField()
+    down_vote_count = models.IntegerField()
+
+
+class CommentUpVote(models.Model):
+    comment_id = models.ForeignKey('Comment', on_delete=models.CASCADE, to_field='comment_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class CommentDownVote(models.Model):
+    comment_id = models.ForeignKey('Comment', on_delete=models.CASCADE, to_field='comment_id')
+    account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+
+class Remind(models.Model): # 提醒管理统一格式为：被提醒者、发生时间、提醒内容三部分，具体细分种类由提醒内容决定
+    # 分好多种类，待完成。
+    remind_id = models.AutoField(primary_key=True)
+    receiver_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')  # 被提醒者
+    create_time = models.DateTimeField()
     content = models.TextField()
-    anonymity = models.BooleanField()
 
 
 class Report(models.Model):
-    id = models.AutoField(primary_key=True)
+    report_id = models.AutoField(primary_key=True)
     # 当被举报话题被删除时置空，表示被举报话题已不存在
     message_id = models.ForeignKey('MessageId', on_delete=models.SET_NULL, null=True, to_field='id')
     reporter = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='id')

@@ -8,27 +8,21 @@ class AccountSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class MessageIdSerializer(ModelSerializer):
-    class Meta:
-        model = MessageId
-        fields = '__all__'
-
-
 class TopicSerializer(ModelSerializer):
     class Meta:
         model = Topic
         fields = '__all__'
 
 
-class TopicPictureSerializer(ModelSerializer):
+class AnswerSerializer(ModelSerializer):
     class Meta:
-        model = TopicPicture
+        model = Answer
         fields = '__all__'
 
 
-class CommentSerializer(ModelSerializer):
+class RemindSerializer(ModelSerializer):
     class Meta:
-        model = Comment
+        model = Remind
         fields = '__all__'
 
 
@@ -36,3 +30,4 @@ class ReportSerializer(ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
+
