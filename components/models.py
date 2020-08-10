@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 
@@ -29,6 +30,13 @@ class Account(models.Model):
         (SUPER, '管理用户'),
     ]
     type = models.CharField(max_length=10, default=NORMAL, choices=ACCOUNT_TYPE)
+
+
+class Token(models.Model):
+    name = models.CharField(max_length=15, primary_key=True)
+    token = models.CharField(max_length=64)
+    time = models.DateTimeField()
+    date = models.CharField(max_length=12, default="")
 
 
 class FocusAccount(models.Model): # 用户关注别人，多对多关系，使用一张表专门记录
@@ -98,8 +106,8 @@ class Reply(models.Model):
     content = models.TextField()
     create_time = models.DateTimeField()
     legal = models.BooleanField(default=True)
-    up_count = models.IntegerField(default=0)
-    down_count = models.IntegerField(default=0)
+    up_vote_count = models.IntegerField(default=0)
+    down_vote_count = models.IntegerField(default=0)
 
 
 class ReplyAttitude(models.Model):
@@ -116,6 +124,11 @@ class ReplyAttitude(models.Model):
 class ReplyCollect(models.Model):
     reply_id = models.ForeignKey('Reply', on_delete=models.CASCADE, to_field='reply_id')
     account_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['reply_id', 'account_id'], name='unique_collect')   # 一个账号对一个消息只能收藏一次
+        ]
 
 
 # class Answer(models.Model):  # 回复
@@ -178,7 +191,7 @@ class Remind(models.Model): # 提醒管理统一格式为：被提醒者、发�
     # 分好多种类，待完成。
     remind_id = models.AutoField(primary_key=True)
     receiver_id = models.ForeignKey('Account', on_delete=models.CASCADE, to_field='account_id')  # 被提醒者
-    create_time = models.DateTimeField()
+    create_time = models.DateTimeField(default=timezone.now())
     content = models.TextField()
 
 
