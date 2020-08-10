@@ -8,16 +8,62 @@ class AccountSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class LoginSerializer(ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ['nickname', 'password']
+
+
+class SignupSerializer(ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
+            'nickname',
+            'password',
+            'avatar',
+            'background',
+            'signature'
+        ]
+
+
+class InfoSerializer(ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
+            'account_id',
+            'nickname',
+            'avatar',
+            'background',
+            'signature'
+        ]
+
+
+class TokenSerializer(ModelSerializer):
+    class Meta:
+        model = Token
+        fields = ['token', 'date']
+
+
 class TopicSerializer(ModelSerializer):
     class Meta:
         model = Topic
         fields = '__all__'
 
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['topic_id'] = new_id
+        return Topic.objects.create(**validated_data)
 
-class AnswerSerializer(ModelSerializer):
+
+class ReplySerializer(ModelSerializer):
     class Meta:
-        model = Answer
+        model = Reply
         fields = '__all__'
+
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['reply_id'] = new_id
+        return Reply.objects.create(**validated_data)
 
 
 class RemindSerializer(ModelSerializer):
@@ -26,8 +72,37 @@ class RemindSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class FocusAccountSerializer(ModelSerializer):
+    class Meta:
+        model = FocusAccount
+        fields = '__all__'
+
+
+class FocusTopicSerializer(ModelSerializer):
+    class Meta:
+        model = FocusTopic
+        fields = '__all__'
+
+
+class ReplyCollectSerializer(ModelSerializer):
+    class Meta:
+        model = ReplyCollect
+        fields = '__all__'
+
+
+class CategorySerializer(ModelSerializer):
+    class Meta:
+        model = Category1
+        fields = '__all__'
+
+
 class ReportSerializer(ModelSerializer):
     class Meta:
         model = Report
         fields = '__all__'
 
+
+class TopicAttitudeSerializer(ModelSerializer):
+    class Meta:
+        model = TopicAttitude
+        fields = '__all__'
