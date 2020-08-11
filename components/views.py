@@ -83,14 +83,14 @@ class Signup(ListCreateAPIView):
         return Response("")
 
 
-class getUserInfo(ListAPIView):
+class getUserInfo(ListAPIView):     # DONE
     queryset = Account.objects.all()
     serializer_class = InfoSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('account_id',)
 
 
-class updateUserInfo(UpdateModelMixin, GenericViewSet):
+class updateUserInfo(UpdateModelMixin, GenericViewSet):     # DONE
     """
     向 infou/account_id/ 发送 PUT/PATCH 以进行更新
     """
@@ -98,32 +98,32 @@ class updateUserInfo(UpdateModelMixin, GenericViewSet):
     serializer_class = InfoSerializer
 
 
-class getTopic(ListAPIView):
+class getTopic(ListAPIView):        # DONE
     queryset = Topic.objects.all()
     serializer_class = TopicSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('topic_id',)
 
 
-class updateTopic(UpdateAPIView):
+class updateTopic(UpdateModelMixin, GenericViewSet):        # DONE
     serializer_class = TopicSerializer
     queryset = Topic.objects.all()
 
 
-class getReply(ListAPIView):
+class getReply(ListAPIView):            # DONE
     queryset = Reply.objects.all()
     serializer_class = ReplySerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('reply_id',)
 
 
-class createReply(CreateAPIView):
+class createReply(CreateAPIView):       # DONE
     queryset = Reply.objects.all()
-    serializer_class = ReplySerializer
+    serializer_class = ReplyCreateSerializer
 
     def post(self, request, *args, **kwargs):
         ret = self.create(request, *args, **kwargs)
-        parent_id = request.data.get('parent_id')
+        parent_id = request.data.get('master_id')
         parent_msg_type = msgType(parent_id)
         if parent_msg_type == 1:
             parent_topic = Topic.objects.filter(topic_id=parent_id).first()
@@ -147,7 +147,7 @@ class updateReply(UpdateAPIView):
     queryset = Reply.objects.all()
 
 
-class getRemind(ListAPIView):
+class getRemind(ListAPIView):       # DONE
     queryset = Remind.objects.all()
     serializer_class = RemindSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -159,7 +159,7 @@ class createRemind(CreateAPIView):
     serializer_class = RemindSerializer
 
 
-class getMsgsFromUser(ListAPIView):
+class getMsgsFromUser(ListAPIView):     # DONE
     queryset = Topic.objects.all()
     serializer_class = TopicSerializer
 
@@ -169,9 +169,9 @@ class getMsgsFromUser(ListAPIView):
         topics = Topic.objects.filter(account_id=user_id)
         replies = Reply.objects.filter(account_id=user_id)
         for topic in topics:
-            ret_list.append([topic.topic_id, 1])
+            ret_list.append([topic.topic_id.id, 1])
         for reply in replies:
-            ret_list.append([reply.reply_id, 2])
+            ret_list.append([reply.reply_id.id, 2])
         return Response(data=ret_list, status=status.HTTP_200_OK)
 
 
@@ -206,7 +206,7 @@ class collectReply(ListCreateAPIView):
         return ret
 
 
-class getRemindFromUser(ListAPIView):
+class getRemindFromUser(ListAPIView):       # DONE
     queryset = Remind.objects.all()
     serializer_class = RemindSerializer
 
@@ -219,7 +219,7 @@ class getRemindFromUser(ListAPIView):
         return Response(data=ret_list, status=status.HTTP_200_OK)
 
 
-class getCategory(ListAPIView):
+class getCategory(ListAPIView):     # DONE
     queryset = Category1.objects.all()
     serializer_class = CategorySerializer
 
@@ -228,18 +228,18 @@ class getCategory(ListAPIView):
         cat1 = Category1.objects.all()
         cat2 = Category2.objects.all()
         for cat in cat1:
-            categories.append([cat1.name,0])
+            categories.append([cat.category1_name,0,cat.category1_id])
         for cat in cat2:
-            categories.append([cat2.name,Category1.objects.filter(category1_id=cat2.category1_id).first().name])
+            categories.append([cat.category2_name,Category1.objects.filter(category1_id=cat.category1_id.category1_id).first().category1_name,cat.category2_id])
         return Response(data=categories, status=status.HTTP_200_OK)
 
 
-class createCategory1(CreateAPIView):
+class createCategory1(CreateAPIView):       # backdoor
     queryset = Category1.objects.all()
     serializer_class = CategorySerializer
 
 
-class createCategory2(CreateAPIView):
+class createCategory2(CreateAPIView):       # backdoor
     queryset = Category2.objects.all()
     serializer_class = Category2Serializer
 
@@ -257,9 +257,9 @@ class getTopicFromCategory(ListAPIView):
         return Response(data=ret_list, status=status.HTTP_200_OK)
 
 
-class createTopic(CreateAPIView):
+class createTopic(CreateAPIView):       # DONE
     queryset = Topic.objects.all()
-    serializer_class = TopicSerializer
+    serializer_class = TopicCreateSerializer
 
 
 class createFocusFromTopic(CreateAPIView):
@@ -373,7 +373,7 @@ class createAttitudeFromMsg(CreateAPIView):
         return Response(status.HTTP_404_NOT_FOUND)
 
 
-class getReplyFromMsg(ListAPIView):
+class getReplyFromMsg(ListAPIView):     # DONE
     queryset = Reply.objects.all()
     serializer_class = ReplySerializer
 
@@ -381,11 +381,11 @@ class getReplyFromMsg(ListAPIView):
         ret = []
         direct = Reply.objects.filter(master_id=request.data.get('id'))
         for msg in direct:
-            ret.append([msg.reply_id, msg.master_id])
+            ret.append([msg.reply_id.id, msg.master_id.id])
         for item in ret:
             append_list = Reply.objects.filter(master_id=item[0])
             for append_item in append_list:
-                ret.append([append_item.reply_id, append_item.master_id])
+                ret.append([append_item.reply_id.id, append_item.master_id.id])
         return Response(data=ret, status=status.HTTP_200_OK)
 
 

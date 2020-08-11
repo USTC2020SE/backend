@@ -55,10 +55,32 @@ class TopicSerializer(ModelSerializer):
         return Topic.objects.create(**validated_data)
 
 
+class TopicCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = ['category2_id', 'account_id', 'content', 'tags']
+
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['topic_id'] = new_id
+        return Topic.objects.create(**validated_data)
+
+
 class ReplySerializer(ModelSerializer):
     class Meta:
         model = Reply
         fields = '__all__'
+
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['reply_id'] = new_id
+        return Reply.objects.create(**validated_data)
+
+
+class ReplyCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Reply
+        fields = ['master_id', 'account_id', 'content']
 
     def create(self, validated_data):
         new_id = Id.objects.create()

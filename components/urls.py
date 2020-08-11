@@ -22,7 +22,7 @@ urlpatterns = [
     path(r'info/', getUserInfo.as_view()),
     # path(r'^infou/(?P<account_id>\d+)/$', updateUserInfo.as_view()),
     path(r'topic/', getTopic.as_view()),
-    path(r'topicu/', updateTopic.as_view()),
+    # path(r'topicu/', updateTopic.as_view()),
     path(r'reply/', getReply.as_view()),
     path(r'replyc/', createReply.as_view()),
     path(r'replyu/', updateReply.as_view()),
@@ -31,6 +31,8 @@ urlpatterns = [
     path(r'msgs/', getMsgsFromUser.as_view()),
     path(r'focus/', getFocusFromUser.as_view()),
     path(r'collect/', collectReply.as_view()),
+    path(r'c1/', createCategory1.as_view()),
+    path(r'c2/', createCategory2.as_view()),
     path(r'userremind/', getRemindFromUser.as_view()),
     path(r'category/', getCategory.as_view()),
     path(r'categorytopic/', getTopicFromCategory.as_view()),
@@ -44,4 +46,5 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 router.register('infou', updateUserInfo)
+router.register('topicu', updateTopic)
 urlpatterns += router.urls
