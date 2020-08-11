@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .serializers import *
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.generics import GenericAPIView, ListCreateAPIView, ListAPIView, UpdateAPIView, CreateAPIView
 import hashlib
 from django.utils import timezone
@@ -90,9 +90,12 @@ class getUserInfo(ListAPIView):
     filter_fields = ('account_id',)
 
 
-class updateUserInfo(UpdateAPIView):
-    serializer_class = InfoSerializer
+class updateUserInfo(UpdateModelMixin, GenericViewSet):
+    """
+    向 infou/account_id/ 发送 PUT/PATCH 以进行更新
+    """
     queryset = Account.objects.all()
+    serializer_class = InfoSerializer
 
 
 class getTopic(ListAPIView):
@@ -176,7 +179,7 @@ class getFocusFromUser(ListAPIView):
     queryset = FocusAccount.objects.all()
     serializer_class = FocusAccountSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('account_id',)
+    filter_fields = ('focusing_id',)
 
 
 class getFocusTopic(ListAPIView):
@@ -229,6 +232,16 @@ class getCategory(ListAPIView):
         for cat in cat2:
             categories.append([cat2.name,Category1.objects.filter(category1_id=cat2.category1_id).first().name])
         return Response(data=categories, status=status.HTTP_200_OK)
+
+
+class createCategory1(CreateAPIView):
+    queryset = Category1.objects.all()
+    serializer_class = CategorySerializer
+
+
+class createCategory2(CreateAPIView):
+    queryset = Category2.objects.all()
+    serializer_class = Category2Serializer
 
 
 class getTopicFromCategory(ListAPIView):

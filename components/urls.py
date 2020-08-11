@@ -20,7 +20,7 @@ urlpatterns = [
     path(r'login/', Login.as_view()),
     path(r'signup/', Signup.as_view()),
     path(r'info/', getUserInfo.as_view()),
-    path(r'infou/', updateUserInfo.as_view()),
+    # path(r'^infou/(?P<account_id>\d+)/$', updateUserInfo.as_view()),
     path(r'topic/', getTopic.as_view()),
     path(r'topicu/', updateTopic.as_view()),
     path(r'reply/', getReply.as_view()),
@@ -43,5 +43,5 @@ urlpatterns = [
 ]
 
 router = routers.DefaultRouter()
-
+router.register('infou', updateUserInfo)
 urlpatterns += router.urls

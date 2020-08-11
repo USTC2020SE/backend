@@ -96,6 +96,12 @@ class CategorySerializer(ModelSerializer):
         fields = '__all__'
 
 
+class Category2Serializer(ModelSerializer):
+    class Meta:
+        model = Category2
+        fields = '__all__'
+
+
 class ReportSerializer(ModelSerializer):
     class Meta:
         model = Report
