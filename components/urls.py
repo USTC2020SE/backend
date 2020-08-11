@@ -25,7 +25,7 @@ urlpatterns = [
     # path(r'topicu/', updateTopic.as_view()),
     path(r'reply/', getReply.as_view()),
     path(r'replyc/', createReply.as_view()),
-    path(r'replyu/', updateReply.as_view()),
+    # path(r'replyu/', updateReply.as_view()),
     path(r'remind/', getRemind.as_view()),
     path(r'remindc/', createRemind.as_view()),
     path(r'msgs/', getMsgsFromUser.as_view()),
@@ -41,10 +41,12 @@ urlpatterns = [
     path(r'reportc/', createReportFromMsg.as_view()),
     path(r'attitude/', createAttitudeFromMsg.as_view()),
     path(r'msgreply/', getReplyFromMsg.as_view()),
-    path(r'reportdeal/', dealReport.as_view())
+    path(r'reportdeal/', dealReport.as_view()),
+    path(r'super/', Super.as_view())
 ]
 
 router = routers.DefaultRouter()
 router.register('infou', updateUserInfo)
 router.register('topicu', updateTopic)
+router.register('replyu', updateReply)
 urlpatterns += router.urls

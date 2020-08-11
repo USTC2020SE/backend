@@ -142,7 +142,7 @@ class createReply(CreateAPIView):       # DONE
         return ret
 
 
-class updateReply(UpdateAPIView):
+class updateReply(UpdateModelMixin, GenericViewSet):        # DONE
     serializer_class = ReplySerializer
     queryset = Reply.objects.all()
 
@@ -154,7 +154,7 @@ class getRemind(ListAPIView):       # DONE
     filter_fields = ('remind_id',)
 
 
-class createRemind(CreateAPIView):
+class createRemind(CreateAPIView):      # not needed?
     queryset = Remind.objects.all()
     serializer_class = RemindSerializer
 
@@ -189,7 +189,7 @@ class getFocusTopic(ListAPIView):
     filter_fields = ('account_id',)
 
 
-class collectReply(ListCreateAPIView):
+class collectReply(ListCreateAPIView):      # DONE
     queryset = ReplyCollect.objects.all()
     serializer_class = ReplyCollectSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -201,7 +201,7 @@ class collectReply(ListCreateAPIView):
         reply_creator = reply.account_id
         created_remind = Remind.objects.create(
             receiver_id=reply_creator,
-            content='回复/评论'+str(reply.reply_id)+'收到收藏'
+            content='回复/评论'+str(reply.reply_id.id)+'收到收藏'
         )
         return ret
 
@@ -244,7 +244,7 @@ class createCategory2(CreateAPIView):       # backdoor
     serializer_class = Category2Serializer
 
 
-class getTopicFromCategory(ListAPIView):
+class getTopicFromCategory(ListAPIView):       # DONE
     queryset = Topic.objects.all()
     serializer_class = TopicSerializer
 
@@ -253,7 +253,7 @@ class getTopicFromCategory(ListAPIView):
         ret_list = []
         topics = Topic.objects.filter(category2_id=cat)
         for topic in topics:
-            ret_list.append(topic.topic_id)
+            ret_list.append(topic.topic_id.id)
         return Response(data=ret_list, status=status.HTTP_200_OK)
 
 
@@ -262,7 +262,7 @@ class createTopic(CreateAPIView):       # DONE
     serializer_class = TopicCreateSerializer
 
 
-class createFocusFromTopic(CreateAPIView):
+class createFocusFromTopic(CreateAPIView):      # DONE
     queryset = FocusTopic.objects.all()
     serializer_class = FocusTopicSerializer
 
@@ -278,7 +278,7 @@ class createFocusFromTopic(CreateAPIView):
         return ret
 
 
-class createReportFromMsg(CreateAPIView):
+class createReportFromMsg(CreateAPIView):       # DONE
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
 
@@ -315,7 +315,7 @@ class createReportFromMsg(CreateAPIView):
         return ret
 
 
-class createAttitudeFromMsg(CreateAPIView):
+class createAttitudeFromMsg(CreateAPIView):     # DONE
     queryset = TopicAttitude.objects.all()
     serializer_class = TopicAttitudeSerializer
 
@@ -323,53 +323,59 @@ class createAttitudeFromMsg(CreateAPIView):
         msg_type = msgType(request.data.get('id'))
         attitude=request.data.get('attitude')
         if msg_type == 1:   # Topic
-            ret = TopicAttitude.objects.create(
-                topic_id=request.data.get('id'),
-                account_id=request.data.get('account_id'),
-                attitude=True if attitude == 1 else False
-            )
-            topic = Topic.objects.filter(topic_id=request.data.get('id')).first()
-            if attitude == 1:
-                old_up = topic.up_vote_count
-                Topic.objects.filter(topic_id=request.data.get('id')).update(up_vote_count=old_up+1)
-                topic_creator = topic.account_id
-                create_remind = Remind.objects.create(
-                    receiver_id=topic_creator,
-                    content='话题'+str(topic.topic_id)+'收到一个赞'
+            try:
+                ret = TopicAttitude.objects.create(
+                    topic_id=Topic.objects.filter(topic_id=request.data.get('id')).first(),
+                    account_id=Account.objects.filter(account_id=request.data.get('account_id')).first(),
+                    attitude=True if attitude == 1 else False
                 )
-            elif attitude == 2:
-                old_down = topic.down_vote_count
-                Topic.objects.filter(topic_id=request.data.get('id')).update(down_vote_count=old_down+1)
-                topic_creator = topic.account_id
-                create_remind = Remind.objects.create(
-                    receiver_id=topic_creator,
-                    content='话题'+str(topic.topic_id)+'收到一个踩'
-                )
-            return ret
+                topic = Topic.objects.filter(topic_id=request.data.get('id')).first()
+                if attitude == 1:
+                    old_up = topic.up_vote_count
+                    Topic.objects.filter(topic_id=request.data.get('id')).update(up_vote_count=old_up+1)
+                    topic_creator = topic.account_id
+                    create_remind = Remind.objects.create(
+                        receiver_id=topic_creator,
+                        content='话题'+str(topic.topic_id.id)+'收到一个赞'
+                    )
+                elif attitude == 2:
+                    old_down = topic.down_vote_count
+                    Topic.objects.filter(topic_id=request.data.get('id')).update(down_vote_count=old_down+1)
+                    topic_creator = topic.account_id
+                    create_remind = Remind.objects.create(
+                        receiver_id=topic_creator,
+                        content='话题'+str(topic.topic_id.id)+'收到一个踩'
+                    )
+                return Response(status.HTTP_200_OK)
+            except:
+                return Response(status.HTTP_400_BAD_REQUEST)
         elif msg_type == 2:
-            ret = ReplyAttitude.objects.create(
-                reply_id=request.data.get('id'),
-                account_id=request.data.get('account_id'),
-                attitude=True if attitude == 1 else False
-            )
-            reply = Reply.objects.filter(reply_id=request.data.get('id')).first()
-            if attitude == 1:
-                old_up = reply.up_vote_count
-                Reply.objects.filter(reply_id=request.data.get('id')).update(up_vote_count=old_up+1)
-                reply_creator = reply.account_id
-                create_remind = Remind.objects.create(
-                    receiver_id=reply_creator,
-                    content='回复/评论'+str(reply.reply_id)+'收到一个赞'
+            try:
+                ret = ReplyAttitude.objects.create(
+                    reply_id=Reply.objects.filter(reply_id=request.data.get('id')).first(),
+                    account_id=Account.objects.filter(account_id=request.data.get('account_id')).first(),
+                    attitude=True if attitude == 1 else False
                 )
-            elif attitude == 2:
-                old_down = reply.down_vote_count
-                Reply.objects.filter(reply_id=request.data.get('id')).update(down_vote_count=old_down+1)
-                reply_creator = reply.account_id
-                create_remind = Remind.objects.create(
-                    receiver_id=reply_creator,
-                    content='回复/评论'+str(reply.reply_id)+'收到一个踩'
-                )
-            return ret
+                reply = Reply.objects.filter(reply_id=request.data.get('id')).first()
+                if attitude == 1:
+                    old_up = reply.up_vote_count
+                    Reply.objects.filter(reply_id=request.data.get('id')).update(up_vote_count=old_up+1)
+                    reply_creator = reply.account_id
+                    create_remind = Remind.objects.create(
+                        receiver_id=reply_creator,
+                        content='回复/评论'+str(reply.reply_id.id)+'收到一个赞'
+                    )
+                elif attitude == 2:
+                    old_down = reply.down_vote_count
+                    Reply.objects.filter(reply_id=request.data.get('id')).update(down_vote_count=old_down+1)
+                    reply_creator = reply.account_id
+                    create_remind = Remind.objects.create(
+                        receiver_id=reply_creator,
+                        content='回复/评论'+str(reply.reply_id.id)+'收到一个踩'
+                    )
+                return Response(status.HTTP_200_OK)
+            except:
+                return Response(status.HTTP_400_BAD_REQUEST)
         return Response(status.HTTP_404_NOT_FOUND)
 
 
@@ -389,7 +395,7 @@ class getReplyFromMsg(ListAPIView):     # DONE
         return Response(data=ret, status=status.HTTP_200_OK)
 
 
-class dealReport(CreateAPIView):
+class dealReport(CreateAPIView):        # DONE
     queryset = Remind.objects.all()
     serializer_class = RemindSerializer
 
@@ -422,12 +428,21 @@ class dealReport(CreateAPIView):
                 receiver_id=topic_creator,
                 content='您的话题'+str(report_id)+'被举报，已有结果'
             )
+            if status == 'success':
+                Topic.objects.filter(topic_id=msg_id).update(legal=False)
         elif msg_type == 2:
             reply_creator = Reply.objects.filter(reply_id=msg_id).first().account_id
             create_remind = Remind.objects.create(
                 receiver_id=reply_creator,
                 content='您的回复/评论'+str(report_id)+'被举报，已有结果'
             )
+            if status == 'success':
+                Reply.objects.filter(reply_id=msg_id).update(legal=False)
         else:
             raise exceptions.NotFound
-        return report
+        return Response(data=report)
+
+
+class Super(CreateAPIView):
+    queryset = Account.objects.all()
+    serializer_class = SuperSignupSerializer

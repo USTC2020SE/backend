@@ -26,6 +26,22 @@ class SignupSerializer(ModelSerializer):
         ]
 
 
+class SuperSignupSerializer(ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
+            'nickname',
+            'password',
+            'avatar',
+            'background',
+            'signature'
+        ]
+
+    def create(self, validated_data):
+        validated_data['type'] = 'super'
+        return Account.objects.create(**validated_data)
+
+
 class InfoSerializer(ModelSerializer):
     class Meta:
         model = Account
