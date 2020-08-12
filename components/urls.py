@@ -20,17 +20,19 @@ urlpatterns = [
     path(r'login/', Login.as_view()),
     path(r'signup/', Signup.as_view()),
     path(r'info/', getUserInfo.as_view()),
-    path(r'infou/', updateUserInfo.as_view()),
+    # path(r'^infou/(?P<account_id>\d+)/$', updateUserInfo.as_view()),
     path(r'topic/', getTopic.as_view()),
-    path(r'topicu/', updateTopic.as_view()),
+    # path(r'topicu/', updateTopic.as_view()),
     path(r'reply/', getReply.as_view()),
     path(r'replyc/', createReply.as_view()),
-    path(r'replyu/', updateReply.as_view()),
+    # path(r'replyu/', updateReply.as_view()),
     path(r'remind/', getRemind.as_view()),
     path(r'remindc/', createRemind.as_view()),
     path(r'msgs/', getMsgsFromUser.as_view()),
     path(r'focus/', getFocusFromUser.as_view()),
     path(r'collect/', collectReply.as_view()),
+    path(r'c1/', createCategory1.as_view()),
+    path(r'c2/', createCategory2.as_view()),
     path(r'userremind/', getRemindFromUser.as_view()),
     path(r'category/', getCategory.as_view()),
     path(r'categorytopic/', getTopicFromCategory.as_view()),
@@ -39,9 +41,12 @@ urlpatterns = [
     path(r'reportc/', createReportFromMsg.as_view()),
     path(r'attitude/', createAttitudeFromMsg.as_view()),
     path(r'msgreply/', getReplyFromMsg.as_view()),
-    path(r'reportdeal/', dealReport.as_view())
+    path(r'reportdeal/', dealReport.as_view()),
+    path(r'super/', Super.as_view())
 ]
 
 router = routers.DefaultRouter()
-
+router.register('infou', updateUserInfo)
+router.register('topicu', updateTopic)
+router.register('replyu', updateReply)
 urlpatterns += router.urls

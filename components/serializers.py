@@ -26,6 +26,22 @@ class SignupSerializer(ModelSerializer):
         ]
 
 
+class SuperSignupSerializer(ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
+            'nickname',
+            'password',
+            'avatar',
+            'background',
+            'signature'
+        ]
+
+    def create(self, validated_data):
+        validated_data['type'] = 'super'
+        return Account.objects.create(**validated_data)
+
+
 class InfoSerializer(ModelSerializer):
     class Meta:
         model = Account
@@ -55,10 +71,32 @@ class TopicSerializer(ModelSerializer):
         return Topic.objects.create(**validated_data)
 
 
+class TopicCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Topic
+        fields = ['category2_id', 'account_id', 'content', 'tags']
+
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['topic_id'] = new_id
+        return Topic.objects.create(**validated_data)
+
+
 class ReplySerializer(ModelSerializer):
     class Meta:
         model = Reply
         fields = '__all__'
+
+    def create(self, validated_data):
+        new_id = Id.objects.create()
+        validated_data['reply_id'] = new_id
+        return Reply.objects.create(**validated_data)
+
+
+class ReplyCreateSerializer(ModelSerializer):
+    class Meta:
+        model = Reply
+        fields = ['master_id', 'account_id', 'content']
 
     def create(self, validated_data):
         new_id = Id.objects.create()
@@ -93,6 +131,12 @@ class ReplyCollectSerializer(ModelSerializer):
 class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category1
+        fields = '__all__'
+
+
+class Category2Serializer(ModelSerializer):
+    class Meta:
+        model = Category2
         fields = '__all__'
 
 
