@@ -180,6 +180,11 @@ class getFocusFromUser(ListAPIView):
     serializer_class = FocusAccountSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('focusing_id',)
+   
+
+class createFocusFromUser(CreateAPIView):
+    queryset = FocusAccount.objects.all()
+    serializer_class = FocusAccountSerializer
 
 
 class getFocusTopic(ListAPIView):
@@ -228,7 +233,7 @@ class getCategory(ListAPIView):     # DONE
         cat1 = Category1.objects.all()
         cat2 = Category2.objects.all()
         for cat in cat1:
-            categories.append([cat.category1_name,0,cat.category1_id])
+            categories.append([cat.category1_name,-1,cat.category1_id])
         for cat in cat2:
             categories.append([cat.category2_name,Category1.objects.filter(category1_id=cat.category1_id.category1_id).first().category1_name,cat.category2_id])
         return Response(data=categories, status=status.HTTP_200_OK)
